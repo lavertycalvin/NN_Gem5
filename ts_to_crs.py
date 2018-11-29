@@ -83,24 +83,27 @@ def to_crs(np_file):
                 while(next_touched_set_index != next_touched_way_index):
                     next_touched_set_index = np.argmax(last_touched_set == ts_data[match_set_and_way_index:, -2])
                     next_touched_way_index = np.argmax(last_touched_way == ts_data[match_set_and_way_index:, -1])
+                    if(next_touched_set_index != next_touched_way_index):
+                        #increment to search from smaller of next touched set or index
+                        match_set_and_way_index += max(next_touched_set_index, next_touched_way_index) + 1
+                        continue
+
 
                     if(next_touched_set_index < 0):
                         #set never touched again
                         next_touch_tick = np.iinfo(np.int64).max
                         break;
 
-                    #increment to search from smaller of next touched set or index
-                    match_set_and_way_index += min(next_touched_set_index, next_touched_way_index) + 1
 
-                next_touch_tick = 0
-                if(next_touched_index == 0):
-                    if(ts_data[index + next_touched_index + 1,-2] != last_touched_set):
-                        #print str(ts_data[index + next_touched_index + 1, -2]) + " =?= " + str(last_touched_set)
-                        next_touch_tick = np.iinfo(np.int64).max
+                    next_touch_tick = 0
+                    if(next_touched_set_index == 0):
+                        if(ts_data[match_set_and_way_index + next_touched_set_index,-2] != last_touched_set):
+                            #print str(ts_data[index + next_touched_index + 1, -2]) + " =?= " + str(last_touched_set)
+                            next_touch_tick = np.iinfo(np.int64).max
+                        else:
+                            next_touch_tick = ts_data[match_set_and_way_index + next_touched_set_index,0]
                     else:
-                        next_touch_tick = ts_data[index + next_touched_index + 1,0]
-                else:
-                    next_touch_tick = ts_data[index + next_touched_index + 1,0]
+                        next_touch_tick = ts_data[match_set_and_way_index + next_touched_set_index ,0]
 
             # will fall through when the rest of the data is empty
             except ValueError:
@@ -113,15 +116,15 @@ def to_crs(np_file):
                 sys.exit(1)
 
             #update the appropriate way with when last touched
-            print "Set: " + str(last_touched_set) + " Way: " + str(last_touched_way) + " Last: " + str(last_touched_tick) \
-                                             + " Next: " + str(next_touch_tick)
+            #print "Set: " + str(last_touched_set) + " Way: " + str(last_touched_way) + " Last: " + str(last_touched_tick) \
+            #                                 + " Next: " + str(next_touch_tick)
 
             #get set in cache state to update
             update_cs_index = np.argmax(last_touched_set == g_cache_state[:,0])
             g_cache_state[update_cs_index, (last_touched_way * 2) + 1] = last_touched_tick
             g_cache_state[update_cs_index, (last_touched_way * 2) + 2] = next_touch_tick
 
-            print g_cache_state[update_cs_index,]
+            #print g_cache_state[update_cs_index,]
 
         #once all updates to the cache state are made,
         #add the current cache state to g_crs for each replacement
