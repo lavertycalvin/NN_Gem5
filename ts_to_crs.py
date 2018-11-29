@@ -51,7 +51,7 @@ def to_crs(np_file):
         #set next (and last) touched to inf for every way
         for i in range(1,g_num_ways + 1):
             cache_set[i*2] = max_int
-            cache_set[i*2 - 1] = max_int
+            cache_set[i*2 - 1] = 0
 
 
 
@@ -74,9 +74,24 @@ def to_crs(np_file):
             last_touched_tick = ts_data[index][0]
             last_touched_way  = ts_data[index][-1]
 
-            #now get the tick its next touched (will be set to negative if never touched again
+            #now get the tick its next touched (will be set to negative if never touched again)
+            #need to make sure that both way and set match
+            next_touched_set_index = 1
+            next_touched_way_index = 0
+            match_set_and_way_index = index + 1
             try:
-                next_touched_index = np.argmax(last_touched_set == ts_data[(index + 1):, -2])
+                while(next_touched_set_index != next_touched_way_index):
+                    next_touched_set_index = np.argmax(last_touched_set == ts_data[match_set_and_way_index:, -2])
+                    next_touched_way_index = np.argmax(last_touched_way == ts_data[match_set_and_way_index:, -1])
+
+                    if(next_touched_set_index < 0):
+                        #set never touched again
+                        next_touch_tick = np.iinfo(np.int64).max
+                        break;
+
+                    #increment to search from smaller of next touched set or index
+                    match_set_and_way_index += min(next_touched_set_index, next_touched_way_index) + 1
+
                 next_touch_tick = 0
                 if(next_touched_index == 0):
                     if(ts_data[index + next_touched_index + 1,-2] != last_touched_set):
@@ -98,19 +113,21 @@ def to_crs(np_file):
                 sys.exit(1)
 
             #update the appropriate way with when last touched
-            #print "Set: " + str(last_touched_set) + " Way: " + str(last_touched_way) + " Last: " + str(last_touched_tick) \
-            #                                 + " Next: " + str(next_touch_tick)
+            print "Set: " + str(last_touched_set) + " Way: " + str(last_touched_way) + " Last: " + str(last_touched_tick) \
+                                             + " Next: " + str(next_touch_tick)
 
             #get set in cache state to update
             update_cs_index = np.argmax(last_touched_set == g_cache_state[:,0])
             g_cache_state[update_cs_index, (last_touched_way * 2) + 1] = last_touched_tick
             g_cache_state[update_cs_index, (last_touched_way * 2) + 2] = next_touch_tick
 
+            print g_cache_state[update_cs_index,]
+
         #once all updates to the cache state are made,
         #add the current cache state to g_crs for each replacement
         #print g_crs[g_replacement_num].shape
         g_crs[g_replacement_num,3:] = g_cache_state.flatten()
-        g_crs[g_replacement_num,2] = ts_data[end_update_index + 1,0]
+        g_crs[g_replacement_num,2] = ts_data[end_update_index,0]
         g_crs[g_replacement_num,0] = g_replacement_num
         g_crs[g_replacement_num,1] = last_touched_set
         #print g_crs[g_replacement_num]

@@ -14,7 +14,8 @@ def find_scores(input_fn, num_ways):
 
     #get corresponding set that was replaced
     all_replaced_sets = crs_data[:,1]
-    print all_replaced_sets[0]
+    #print all_replaced_set
+
 
     sample = [0, 0, 34, 45, 32, 22]
     #crs_data = sample
@@ -33,10 +34,25 @@ def find_scores(input_fn, num_ways):
             last_touched[j/2] = touched_ticks[j]
             next_touched[j/2] = touched_ticks[j+ 1]
 
+        curr_tick = crs_data[i, 2]
+        print "Current tick is: " + str(curr_tick)
         print "Last touched: " + str(last_touched)
-        all_last_touched[i,] = last_touched
+        #all_last_touched[i,] = last_touched
         print "Next touched: " + str(next_touched)
-        all_next_touched[i,] = next_touched
+        #all_next_touched[i,] = next_touched
+        
+        
+        #find the current tick based on the highest value of last touched
+        #for every sey
+        way_scores = np.array((1,num_ways))
+        for i in range(len(last_touched)):
+            way_scores[i] = next_touched[i] - curr_tick
+            
+        print way_scores
+
+
+
+        
 
 
 if __name__ == "__main__":
