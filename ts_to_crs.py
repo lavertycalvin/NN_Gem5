@@ -54,6 +54,10 @@ def to_crs(np_file):
             cache_set[i*2 - 1] = 0
 
 
+    #get rid of '.npy'
+    output_filename = input_filename.split('.')[:-2]
+    output_filename = ''.join(output_filename)
+    output_filename = output_filename + '.crs'
 
     #process all misses
     while True:
@@ -130,7 +134,7 @@ def to_crs(np_file):
         #add the current cache state to g_crs for each replacement
         #print g_crs[g_replacement_num].shape
         g_crs[g_replacement_num,3:] = g_cache_state.flatten()
-        g_crs[g_replacement_num,2] = ts_data[end_update_index,0]
+        g_crs[g_replacement_num,2] = ts_data[end_update_index + 1,0]
         g_crs[g_replacement_num,0] = g_replacement_num
         g_crs[g_replacement_num,1] = last_touched_set
         #print g_crs[g_replacement_num]
@@ -141,14 +145,10 @@ def to_crs(np_file):
 
         #update where to look for misses
         g_last_repl_loc = end_update_index + 1
+        np.save(output_filename, g_crs)
 
     print "Finished processing cache replacements!"
-    #get rid of '.npy'
-    output_filename = input_filename.split('.')[:-2]
-    output_filename = ''.join(output_filename)
-    output_filename = output_filename + '.crs'
 
-    np.save(output_filename, g_crs)
 
 if __name__ == "__main__":
     if(len(sys.argv) < 2):

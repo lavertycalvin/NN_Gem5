@@ -1,25 +1,34 @@
-
 from keras.models import Sequential
 from keras.layers import Dense
+import sys
+import numpy as np
 
-g_NUM_CACHE_LINES = 100
+g_NUM_WAYS = 2
 
-model = Sequential()
+def run_nn(nn_in_fn, nn_out_fn):
+   x_train = np.load(nn_in_fn)
+   print x_train.shape
+   y_train = np.load(nn_out_fn)
+   print y_train.shape
+   
+   model = Sequential()
 
-model.add(Dense(units=10, activation='tansig', input_dim=g_NUM_CACHE_LINES)
+   model.add(Dense(units=10, activation='sigmoid', input_dim=2))
 
-model.add(Dense(units=10, activation='softmax'))
+   model.add(Dense(units=2, activation='softmax'))
 
-model.compile(loss='categorical_crossentropy',
+   model.compile(loss='categorical_crossentropy',
               optimizer='sgd',
               metrics=['accuracy'])
 
-x_train = "cache state"
-y_train = "cache line to replace"
 
 
-model.fit(x_train, y_train, epochs=5, batch_size=32)
+   model.fit(x_train, y_train, epochs=5, batch_size=32)
 
 
+if __name__ == "__main__":
+    if(len(sys.argv) < 3):
+        print "Usage: nn_data.py  nn_x_train nn_y_train"
 
+    run_nn(sys.argv[1], sys.argv[2])
 
