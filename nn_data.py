@@ -2,14 +2,23 @@ from keras.models import Sequential
 from keras.layers import Dense
 import sys
 import numpy as np
+import os
 
 g_NUM_WAYS = 2
 
-def run_nn(nn_in_fn, nn_out_fn):
-   x_train = np.load(nn_in_fn)
-   print x_train.shape
-   y_train = np.load(nn_out_fn)
-   print y_train.shape
+def run_nn():
+   #modify to take in all input numpy arrays
+   all_x_train = np.zeros(shape=(0,2))
+   all_y_train = np.zeros(shape=(0,2))
+   for file_name in os.listdir("."):
+       if "nn_touched" in file_name:
+           x_train = np.load(file_name)
+           all_x_train = np.concatenate((all_x_train, x_train), axis=0)
+       if "nn_scores" in file_name:
+           y_train = np.load(file_name)
+           all_y_train = np.concatenate((all_y_train, y_train), axis=0)
+   print all_x_train.shape
+   print all_y_train.shape
    
    model = Sequential()
 
@@ -24,12 +33,9 @@ def run_nn(nn_in_fn, nn_out_fn):
 
 
 
-   model.fit(x_train, y_train, epochs=5, batch_size=32)
+   model.fit(all_x_train, all_y_train, epochs=5, batch_size=32)
 
 
 if __name__ == "__main__":
-    if(len(sys.argv) < 3):
-        print "Usage: nn_data.py  nn_x_train nn_y_train"
-
-    run_nn(sys.argv[1], sys.argv[2])
+    run_nn()
 
