@@ -13,9 +13,10 @@ def run_nn(nn_in_fn, nn_out_fn):
    
    model = Sequential()
 
+   #hyperbolic tangent activation function rather than sigmoid
    model.add(Dense(units=10, activation='sigmoid', input_dim=2))
 
-   model.add(Dense(units=2, activation='softmax'))
+   model.add(Dense(units=2, activation='linear'))
 
    model.compile(loss='categorical_crossentropy',
               optimizer='sgd',
