@@ -24,7 +24,6 @@ LOC_SET = -3
 LOC_TAG = -5
 LOC_TICK = 0
 
-
 #global numpy array for fun
 #values in each section of the array: tick, hit/miss, address, tag, set, way
 g_np_ts_data = np.empty((6,))
@@ -43,7 +42,7 @@ def format_for_np_array(f_line):
     #set is reserved word in python
     c_set = np.int64(line_split[LOC_SET], 0)
     tick  = np.int64(line_split[LOC_TICK][:-1]) #get rid of ':'
-    tag   = np.int64(line_split[LOC_TAG], 0)
+    tag   = np.int64('0x0', 0)
     way   = np.int64(line_split[LOC_WAY], 0)
 
     if(MISS_KEYWORD in line_split):
@@ -62,20 +61,44 @@ def format_for_np_array(f_line):
     if((len(g_ts_data) == 0) or (new_addition != g_ts_data[-1])):
         g_ts_data.append(new_addition)
 
+    if(len(g_ts_data) % 1000000 == 0):
+
+        data_type=np.dtype('int64', [('tick', 'int64'), ('h_m', 'int8'), ('addr', 'int64'), ('tag','int64'), ('set', 'int32'), ('way', 'int32')])
+        g_np_ts_data = np.array(g_ts_data, dtype=data_type)
+        print g_np_ts_data.shape
+        #print " [ tick    h/m   addr  tag  set  way]"
+
+        #have to get rid of duplicates 
+        print g_np_ts_data
+        np.save(output_file, g_np_ts_data)
+
+
+    
+
 
 ### Parses each line in the input file and searches for Hit or Miss
 ### Omits any unimportant lines
 ### Passes to format_for_np_array
 def to_time_series(input_filename):
+    global g_ts_data
     data_file = open(input_filename, "r")
+    count = 0
     for line in data_file:
         # moving = miss / access =  hit
+        #if(count < 100000):
+        #    count = count + 1
+        #    continue
         if any(word in line for word in [HIT_KEYWORD, MISS_KEYWORD]):
             format_for_np_array(line)
+ 
+        #if(len(g_ts_data) == 1000000):
+            #print g_ts_data[-1]
+            #break
 
     data_file.close()
 
 if __name__ == "__main__":
+    global output_file
     if(len(sys.argv) < 2):
         print "Usage: gem5_to_ts.py [input_file]"
         sys.exit(1)
@@ -84,7 +107,7 @@ if __name__ == "__main__":
     to_time_series(sys.argv[1])
     print g_ts_data[:2]
     #g_ts_data = map(tuple, g_ts_data)
-    data_type=np.dtype('int64', [('tick', 'int64'), ('h_m', 'int64'), ('addr', 'int64'), ('tag','int64'), ('set', 'int64'), ('way', 'int64')])
+    data_type=np.dtype('int64', [('tick', 'int64'), ('h_m', 'int8'), ('addr', 'int64'), ('tag','int64'), ('set', 'int32'), ('way', 'int32')])
     g_np_ts_data = np.array(g_ts_data, dtype=data_type)
     print g_np_ts_data.shape
     #print " [ tick    h/m   addr  tag  set  way]"
